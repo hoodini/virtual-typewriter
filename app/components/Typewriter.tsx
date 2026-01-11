@@ -189,7 +189,10 @@ export function Typewriter() {
 
       if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
         e.preventDefault();
-        handleKeyPress(e.key);
+        // Prevent double typing from keyboard repeat
+        if (!e.repeat) {
+          handleKeyPress(e.key);
+        }
       }
     };
 
@@ -322,23 +325,32 @@ export function Typewriter() {
             {/* Margin bell */}
             <div className={`absolute top-8 right-24 w-6 h-6 rounded-full bg-gradient-radial from-[#D4AF37] to-[#8A7C4F] shadow-md z-30 ${marginBellRinging ? "animate-pulse" : ""}`} title="Margin Bell" />
 
-            {/* Typebar fan (visual only) */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[80px] overflow-hidden z-0" style={{ perspective: "300px" }}>
+            {/* Typebar fan - visible lever mechanism */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[600px] h-[160px] z-20" style={{ perspective: "500px", transformStyle: "preserve-3d" }}>
               {Array.from({ length: 44 }).map((_, i) => {
-                const angle = (i - 22) * 3.5;
+                const angle = (i - 22) * 3.2;
                 const isActive = activeTypebar !== null && Math.abs(i - (activeTypebar.charCodeAt(0) - 97 + 22)) < 2;
                 return (
                   <div
                     key={i}
-                    className="absolute bottom-0 left-1/2 w-[6px] h-[70px] origin-bottom"
+                    className="absolute bottom-0 left-1/2 w-[8px] origin-bottom"
                     style={{
-                      background: "linear-gradient(to top, #808080, #C0C0C0, #808080)",
-                      transform: `translateX(-50%) rotateZ(${angle}deg) ${isActive ? "rotateX(-50deg)" : ""}`,
-                      transition: isActive ? "transform 0.06s ease-out" : "none",
-                      borderRadius: "2px",
+                      height: "140px",
+                      background: "linear-gradient(to top, #606060, #909090, #B0B0B0, #909090, #606060)",
+                      transform: `translateX(-50%) rotateZ(${angle}deg) ${isActive ? "rotateX(-70deg)" : "rotateX(0deg)"}`,
+                      transition: "transform 0.08s ease-out",
+                      borderRadius: "3px",
+                      boxShadow: isActive ? "0 -5px 15px rgba(0,0,0,0.4)" : "2px 0 4px rgba(0,0,0,0.3)",
                     }}
                   >
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-4 bg-gradient-to-b from-[#A0A0A0] to-[#707070] rounded-sm" />
+                    {/* Typehead at the end of the lever */}
+                    <div
+                      className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-5 rounded-sm"
+                      style={{
+                        background: "linear-gradient(to bottom, #C0C0C0, #808080, #606060)",
+                        boxShadow: "0 1px 2px rgba(0,0,0,0.4)",
+                      }}
+                    />
                   </div>
                 );
               })}

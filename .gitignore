@@ -42,3 +42,4 @@ next-env.d.ts
 
 # reference images (large files for development only)
 /reference_images/
+.env

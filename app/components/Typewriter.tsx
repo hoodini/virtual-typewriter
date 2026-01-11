@@ -28,14 +28,12 @@ export function Typewriter() {
     getElapsedTime,
     setKeyPressed,
     dismissBackspaceTooltip,
-    saveWork,
     CHARS_PER_LINE,
     LINES_PER_PAGE,
     INK_RIBBON_CAPACITY,
   } = useTypewriterState();
 
   const {
-    isLoaded: soundLoaded,
     initAudio,
     playKeystroke,
     playSpacebar,
@@ -72,34 +70,27 @@ export function Typewriter() {
       handleFirstInteraction();
 
       if (state.jamState.isJammed) {
-        if (state.settings.soundEnabled) {
-          playTypebarJam();
-        }
+        if (state.settings.soundEnabled) playTypebarJam();
         return;
       }
 
-      // Check if page is full
       if (isPageFull() && state.carriagePosition >= CHARS_PER_LINE - 1) {
         setShowPageFullPrompt(true);
         return;
       }
 
-      // Animate typebar
       setActiveTypebar(char.toLowerCase());
       setTimeout(() => setActiveTypebar(null), 80);
 
       const result = typeCharacter(char);
 
       if (result.isJammed) {
-        if (state.settings.soundEnabled) {
-          playTypebarJam();
-        }
+        if (state.settings.soundEnabled) playTypebarJam();
         return;
       }
 
       if (result.shouldPlaySound && state.settings.soundEnabled) {
         playKeystroke();
-        playCarriageAdvance();
       }
 
       if (result.isMarginBell && state.settings.soundEnabled) {
@@ -108,25 +99,12 @@ export function Typewriter() {
         setTimeout(() => setMarginBellRinging(false), 300);
       }
     },
-    [
-      handleFirstInteraction,
-      state.jamState.isJammed,
-      state.carriagePosition,
-      state.settings.soundEnabled,
-      isPageFull,
-      typeCharacter,
-      playKeystroke,
-      playCarriageAdvance,
-      playMarginBell,
-      playTypebarJam,
-      CHARS_PER_LINE,
-    ]
+    [handleFirstInteraction, state.jamState.isJammed, state.carriagePosition, state.settings.soundEnabled, isPageFull, typeCharacter, playKeystroke, playMarginBell, playTypebarJam, CHARS_PER_LINE]
   );
 
   // Handle space
   const handleSpace = useCallback(() => {
     handleFirstInteraction();
-
     if (state.jamState.isJammed) return;
 
     if (isPageFull() && state.carriagePosition >= CHARS_PER_LINE - 1) {
@@ -138,7 +116,6 @@ export function Typewriter() {
 
     if (result.shouldPlaySound && state.settings.soundEnabled) {
       playSpacebar();
-      playCarriageAdvance();
     }
 
     if (result.isMarginBell && state.settings.soundEnabled) {
@@ -146,23 +123,11 @@ export function Typewriter() {
       setMarginBellRinging(true);
       setTimeout(() => setMarginBellRinging(false), 300);
     }
-  }, [
-    handleFirstInteraction,
-    state.jamState.isJammed,
-    state.carriagePosition,
-    state.settings.soundEnabled,
-    isPageFull,
-    typeCharacter,
-    playSpacebar,
-    playCarriageAdvance,
-    playMarginBell,
-    CHARS_PER_LINE,
-  ]);
+  }, [handleFirstInteraction, state.jamState.isJammed, state.carriagePosition, state.settings.soundEnabled, isPageFull, typeCharacter, playSpacebar, playMarginBell, CHARS_PER_LINE]);
 
   // Handle carriage return
   const handleReturn = useCallback(() => {
     handleFirstInteraction();
-
     if (state.jamState.isJammed) return;
 
     if (isPageFull()) {
@@ -177,21 +142,12 @@ export function Typewriter() {
     if (success && state.settings.soundEnabled) {
       playCarriageReturn();
     }
-  }, [
-    handleFirstInteraction,
-    state.jamState.isJammed,
-    isPageFull,
-    carriageReturn,
-    state.settings.soundEnabled,
-    playCarriageReturn,
-  ]);
+  }, [handleFirstInteraction, state.jamState.isJammed, isPageFull, carriageReturn, state.settings.soundEnabled, playCarriageReturn]);
 
   // Handle backspace
   const handleBackspace = useCallback(() => {
     handleFirstInteraction();
-
     if (state.jamState.isJammed) return;
-
     backspace();
   }, [handleFirstInteraction, state.jamState.isJammed, backspace]);
 
@@ -203,7 +159,6 @@ export function Typewriter() {
   // Handle keyboard events
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't handle if settings or modals are open
       if (showSettings || showStats) {
         if (e.key === "Escape") {
           setShowSettings(false);
@@ -212,7 +167,6 @@ export function Typewriter() {
         return;
       }
 
-      // Handle Escape - open settings
       if (e.key === "Escape") {
         if (state.jamState.isJammed) {
           clearJam();
@@ -222,51 +176,17 @@ export function Typewriter() {
         return;
       }
 
-      // Handle view mode switching (1, 2, 3)
-      if (e.key === "1" && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        setViewMode("full");
-        return;
-      }
-      if (e.key === "2" && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        setViewMode("focus");
-        return;
-      }
-      if (e.key === "3" && !e.ctrlKey && !e.altKey && !e.metaKey) {
-        setViewMode("desk");
-        return;
-      }
+      if (e.key === "1" && !e.ctrlKey && !e.altKey && !e.metaKey) { setViewMode("full"); return; }
+      if (e.key === "2" && !e.ctrlKey && !e.altKey && !e.metaKey) { setViewMode("focus"); return; }
+      if (e.key === "3" && !e.ctrlKey && !e.altKey && !e.metaKey) { setViewMode("desk"); return; }
 
-      // Track pressed keys
       setKeyPressed(e.key, true);
 
-      // Handle shift
-      if (e.key === "Shift") {
-        setIsShiftPressed(true);
-        return;
-      }
+      if (e.key === "Shift") { setIsShiftPressed(true); return; }
+      if (e.key === "Enter") { e.preventDefault(); handleReturn(); return; }
+      if (e.key === "Backspace") { e.preventDefault(); handleBackspace(); return; }
+      if (e.key === " ") { e.preventDefault(); handleSpace(); return; }
 
-      // Handle Enter/Return
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleReturn();
-        return;
-      }
-
-      // Handle Backspace
-      if (e.key === "Backspace") {
-        e.preventDefault();
-        handleBackspace();
-        return;
-      }
-
-      // Handle Space
-      if (e.key === " ") {
-        e.preventDefault();
-        handleSpace();
-        return;
-      }
-
-      // Handle printable characters
       if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
         e.preventDefault();
         handleKeyPress(e.key);
@@ -275,30 +195,16 @@ export function Typewriter() {
 
     const handleKeyUp = (e: KeyboardEvent) => {
       setKeyPressed(e.key, false);
-
-      if (e.key === "Shift") {
-        setIsShiftPressed(false);
-      }
+      if (e.key === "Shift") setIsShiftPressed(false);
     };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [
-    showSettings,
-    showStats,
-    state.jamState.isJammed,
-    clearJam,
-    setKeyPressed,
-    handleKeyPress,
-    handleSpace,
-    handleReturn,
-    handleBackspace,
-  ]);
+  }, [showSettings, showStats, state.jamState.isJammed, clearJam, setKeyPressed, handleKeyPress, handleSpace, handleReturn, handleBackspace]);
 
   // Export current page as image
   const handleExport = useCallback(async () => {
@@ -307,11 +213,7 @@ export function Typewriter() {
       const paperElement = document.querySelector(".paper");
       if (!paperElement) return;
 
-      const canvas = await html2canvas(paperElement as HTMLElement, {
-        backgroundColor: null,
-        scale: 2,
-      });
-
+      const canvas = await html2canvas(paperElement as HTMLElement, { backgroundColor: null, scale: 2 });
       const link = document.createElement("a");
       link.download = `typewriter-page-${Date.now()}.png`;
       link.href = canvas.toDataURL("image/png");
@@ -325,180 +227,127 @@ export function Typewriter() {
   const handleLoadNewSheet = useCallback(() => {
     loadNewSheet();
     setShowPageFullPrompt(false);
-    if (state.settings.soundEnabled) {
-      playPaperLoad();
-    }
+    if (state.settings.soundEnabled) playPaperLoad();
   }, [loadNewSheet, state.settings.soundEnabled, playPaperLoad]);
 
-  // Get housing class based on color setting
-  const housingClass =
-    state.settings.housingColor === "burgundy"
-      ? "burgundy"
-      : state.settings.housingColor === "black"
-      ? "black"
-      : "";
+  // Housing color class
+  const housingClass = state.settings.housingColor === "burgundy" ? "burgundy" : state.settings.housingColor === "black" ? "black" : "";
 
-  // Calculate carriage offset for animation
-  const carriageOffset = state.carriagePosition * 9.2; // Approximate character width
-
-  // Get current page
+  // Current page data
   const currentPage = state.pages[state.currentPageIndex];
-
-  // Ribbon remaining percentage
   const ribbonPercentage = (state.inkRemaining / INK_RIBBON_CAPACITY) * 100;
+  const carriageOffset = state.carriagePosition * 8;
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-screen overflow-hidden relative"
-      onClick={handleFirstInteraction}
-    >
-      {/* Background - desk surface with warm lighting */}
+    <div ref={containerRef} className="w-full h-screen overflow-hidden relative" onClick={handleFirstInteraction}>
+      {/* Background - desk surface */}
       <div className="absolute inset-0 desk-surface">
-        {/* Lamp glow effect */}
         <div className="lamp-glow" style={{ top: "-200px", left: "-100px" }} />
         <div className="lamp-glow" style={{ top: "100px", right: "-200px", opacity: 0.3 }} />
       </div>
 
-      {/* Main typewriter container */}
-      <div
-        className={`relative w-full h-full flex flex-col items-center justify-center transition-transform duration-500 ${
-          viewMode === "desk" ? "scale-75" : viewMode === "focus" ? "translate-y-[-120px]" : ""
-        }`}
-      >
-        {/* Typewriter body */}
-        <div
-          className={`typewriter-housing ${housingClass} relative`}
-          style={{
-            width: viewMode === "focus" ? "650px" : "800px",
-            height: viewMode === "focus" ? "auto" : "600px",
-            padding: "20px",
-            transition: "all 0.5s ease",
-          }}
-        >
-          {/* Brass trim top */}
-          <div className="brass-trim absolute top-0 left-8 right-8 h-2 rounded-t-sm" />
+      {/* Main container */}
+      <div className={`relative w-full h-full flex items-center justify-center transition-transform duration-500 ${viewMode === "desk" ? "scale-[0.7]" : viewMode === "focus" ? "scale-100" : ""}`}>
 
-          {/* Paper and platen area */}
-          <div
-            className={`relative mb-4 ${viewMode === "focus" ? "" : "h-[350px]"}`}
-            style={{
-              opacity: viewMode !== "focus" ? 1 : 1,
-            }}
-          >
-            {/* Platen (roller) */}
-            {viewMode !== "focus" && (
-              <div className="platen absolute top-0 left-1/2 -translate-x-1/2 w-[650px] h-6 rounded-full z-10" />
-            )}
+        {/* Typewriter Machine */}
+        <div className={`typewriter-housing ${housingClass} relative flex flex-col`} style={{ width: "900px", padding: "24px" }}>
 
-            {/* Paper guide rails */}
-            {viewMode !== "focus" && (
-              <>
-                <div className="absolute top-6 left-[70px] w-1 h-[320px] bg-gradient-to-b from-[#8A7C4F] to-[#6B5F3E] rounded-full opacity-60" />
-                <div className="absolute top-6 right-[70px] w-1 h-[320px] bg-gradient-to-b from-[#8A7C4F] to-[#6B5F3E] rounded-full opacity-60" />
-              </>
-            )}
+          {/* Top Section - Platen, Paper, Carriage */}
+          <div className="relative h-[380px] mb-4">
 
-            {/* Carriage with ruler */}
-            {viewMode !== "focus" && (
-              <div
-                className={`carriage absolute top-2 left-1/2 w-[620px] h-4 -translate-x-1/2 z-20 ${
-                  carriageReturning ? "transition-transform duration-400" : "transition-transform duration-50"
-                }`}
-                style={{
-                  transform: `translateX(calc(-50% + ${carriageReturning ? 0 : -carriageOffset}px))`,
-                }}
-              >
-                <div className="carriage-ruler w-full h-full rounded" />
-                {/* Carriage return lever */}
-                <div
-                  className="carriage-return-lever absolute -left-8 top-0 w-20 h-3 cursor-pointer"
-                  onClick={handleReturn}
-                  title="Carriage Return (Enter)"
-                />
-              </div>
-            )}
+            {/* Platen (roller) at top */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-8 bg-gradient-to-b from-[#1A1A1A] to-[#2A2A2A] rounded-full shadow-lg z-20" />
 
-            {/* Paper */}
+            {/* Carriage ruler */}
             <div
-              className={`relative z-0 ${viewMode === "focus" ? "" : "mt-8"}`}
-              style={{
-                transform: viewMode === "focus" ? "scale(1.1)" : "scale(0.85)",
-                transformOrigin: "top center",
-              }}
+              className={`absolute top-2 left-1/2 w-[680px] h-5 z-30 ${carriageReturning ? "transition-transform duration-400" : "transition-transform duration-50"}`}
+              style={{ transform: `translateX(calc(-50% + ${carriageReturning ? 0 : -carriageOffset}px))` }}
             >
-              <Paper
-                page={currentPage}
-                currentLineIndex={state.currentLineIndex}
-                currentCharIndex={state.currentCharIndex}
-                settings={state.settings}
-                charsPerLine={CHARS_PER_LINE}
-                linesPerPage={LINES_PER_PAGE}
+              <div className="w-full h-full bg-gradient-to-b from-[#A89058] to-[#8A7C4F] rounded shadow-md relative">
+                {/* Ruler marks */}
+                <div className="absolute inset-0 flex items-center justify-between px-4">
+                  {Array.from({ length: 68 }).map((_, i) => (
+                    <div key={i} className={`w-px ${i % 5 === 0 ? "h-3 bg-[#4A4030]" : "h-2 bg-[#5A5040]"}`} />
+                  ))}
+                </div>
+              </div>
+              {/* Carriage return lever */}
+              <div
+                className="absolute -left-12 top-1/2 -translate-y-1/2 w-16 h-4 bg-gradient-to-r from-[#C0C0C0] to-[#A0A0A0] rounded cursor-pointer hover:from-[#D0D0D0] hover:to-[#B0B0B0] shadow-md"
+                onClick={handleReturn}
+                title="Carriage Return (Enter)"
               />
             </div>
 
-            {/* Ribbon spools */}
-            {viewMode !== "focus" && (
-              <>
-                <div
-                  className="ribbon-spool absolute top-16 left-8 cursor-pointer"
-                  onClick={toggleInkColor}
-                  title={`Switch to ${state.settings.isRedInk ? "black" : "red"} ink`}
-                >
-                  <div className="ribbon-amount">
-                    <div
-                      className="ribbon-fill"
-                      style={{ "--ribbon-remaining": `${ribbonPercentage}%` } as React.CSSProperties}
-                    />
-                  </div>
-                  {/* Red indicator */}
+            {/* Paper area - positioned inside platen */}
+            <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[520px] h-[340px] overflow-hidden z-10">
+              <div style={{ transform: "scale(0.72)", transformOrigin: "top center" }}>
+                <Paper
+                  page={currentPage}
+                  currentLineIndex={state.currentLineIndex}
+                  currentCharIndex={state.currentCharIndex}
+                  settings={state.settings}
+                  charsPerLine={CHARS_PER_LINE}
+                  linesPerPage={LINES_PER_PAGE}
+                />
+              </div>
+            </div>
+
+            {/* Left ribbon spool */}
+            <div
+              className="absolute top-12 left-6 cursor-pointer z-30"
+              onClick={toggleInkColor}
+              title={`Switch to ${state.settings.isRedInk ? "black" : "red"} ink`}
+            >
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] border-[3px] border-[#8A7C4F] shadow-lg relative">
+                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#8A7C4F] to-[#6B5F3E]" />
+                <div className="absolute inset-4 rounded-full bg-[#1A1A1A] border border-[#0A0A0A]">
                   <div
-                    className={`absolute top-1/2 left-1/2 w-3 h-3 rounded-full -translate-x-1/2 -translate-y-1/2 ${
-                      state.settings.isRedInk ? "bg-red-800" : "bg-[#1A1A1A]"
-                    }`}
+                    className="absolute inset-0 rounded-full"
+                    style={{ background: `conic-gradient(from 0deg, #1A1A1A 0%, #1A1A1A ${ribbonPercentage}%, transparent ${ribbonPercentage}%)` }}
                   />
                 </div>
-                <div className="ribbon-spool absolute top-16 right-8">
-                  <div className="ribbon-amount" />
-                </div>
-              </>
-            )}
+                <div className={`absolute top-1/2 left-1/2 w-2 h-2 rounded-full -translate-x-1/2 -translate-y-1/2 ${state.settings.isRedInk ? "bg-red-700" : "bg-[#0A0A0A]"}`} />
+              </div>
+            </div>
+
+            {/* Right ribbon spool */}
+            <div className="absolute top-12 right-6 z-30">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#2A2A2A] to-[#1A1A1A] border-[3px] border-[#8A7C4F] shadow-lg relative">
+                <div className="absolute inset-2 rounded-full bg-gradient-to-br from-[#8A7C4F] to-[#6B5F3E]" />
+                <div className="absolute inset-4 rounded-full bg-[#1A1A1A] border border-[#0A0A0A]" />
+              </div>
+            </div>
 
             {/* Margin bell */}
-            {viewMode !== "focus" && (
-              <div
-                className={`margin-bell absolute top-8 right-16 ${marginBellRinging ? "ringing" : ""}`}
-                title="Margin Bell"
-              />
-            )}
+            <div className={`absolute top-8 right-24 w-6 h-6 rounded-full bg-gradient-radial from-[#D4AF37] to-[#8A7C4F] shadow-md z-30 ${marginBellRinging ? "animate-pulse" : ""}`} title="Margin Bell" />
 
-            {/* Typebars (simplified visual) */}
-            {viewMode !== "focus" && (
-              <div className="typebar-container absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-20 overflow-hidden">
-                {/* Fan of typebars */}
-                {Array.from({ length: 42 }).map((_, i) => {
-                  const angle = (i - 21) * 4;
-                  const isActive = activeTypebar !== null && i === activeTypebar.charCodeAt(0) - 97 + 10;
-                  return (
-                    <div
-                      key={i}
-                      className={`typebar ${isActive ? "striking" : ""}`}
-                      style={{
-                        left: "50%",
-                        transform: `translateX(-50%) rotate(${angle}deg)`,
-                      }}
-                    >
-                      <div className="typebar-head" />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {/* Typebar fan (visual only) */}
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[400px] h-[80px] overflow-hidden z-0" style={{ perspective: "300px" }}>
+              {Array.from({ length: 44 }).map((_, i) => {
+                const angle = (i - 22) * 3.5;
+                const isActive = activeTypebar !== null && Math.abs(i - (activeTypebar.charCodeAt(0) - 97 + 22)) < 2;
+                return (
+                  <div
+                    key={i}
+                    className="absolute bottom-0 left-1/2 w-[6px] h-[70px] origin-bottom"
+                    style={{
+                      background: "linear-gradient(to top, #808080, #C0C0C0, #808080)",
+                      transform: `translateX(-50%) rotateZ(${angle}deg) ${isActive ? "rotateX(-50deg)" : ""}`,
+                      transition: isActive ? "transform 0.06s ease-out" : "none",
+                      borderRadius: "2px",
+                    }}
+                  >
+                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-4 bg-gradient-to-b from-[#A0A0A0] to-[#707070] rounded-sm" />
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Keyboard */}
+          {/* Keyboard Section */}
           {viewMode !== "focus" && (
-            <div className="relative z-30 mt-4">
+            <div className="relative z-40 bg-gradient-to-b from-transparent to-[rgba(0,0,0,0.1)] pt-4 pb-2 rounded-b-lg">
               <TypewriterKeyboard
                 onKeyPress={handleKeyPress}
                 onSpace={handleSpace}
@@ -513,16 +362,14 @@ export function Typewriter() {
         </div>
       </div>
 
-      {/* View mode indicator */}
-      <div className="absolute bottom-4 left-4 flex gap-2">
+      {/* View mode buttons */}
+      <div className="absolute bottom-4 left-4 flex gap-2 z-50">
         {(["full", "focus", "desk"] as const).map((mode, index) => (
           <button
             key={mode}
             onClick={() => setViewMode(mode)}
             className={`w-8 h-8 rounded flex items-center justify-center text-sm font-[Special_Elite] transition-colors ${
-              viewMode === mode
-                ? "bg-[#8A7C4F] text-[#1A1A1A]"
-                : "bg-[#2A2A2A] text-[#8A8A8A] hover:bg-[#3A3A3A]"
+              viewMode === mode ? "bg-[#8A7C4F] text-[#1A1A1A]" : "bg-[#2A2A2A] text-[#8A8A8A] hover:bg-[#3A3A3A]"
             }`}
             title={`${mode.charAt(0).toUpperCase() + mode.slice(1)} View (${index + 1})`}
           >
@@ -531,49 +378,38 @@ export function Typewriter() {
         ))}
       </div>
 
-      {/* Quick stats indicator */}
+      {/* Stats button */}
       <button
         onClick={() => setShowStats(true)}
-        className="absolute bottom-4 right-4 px-4 py-2 rounded bg-[#2A2A2A] text-[#8A7C4F] font-[Special_Elite] text-sm hover:bg-[#3A3A3A] transition-colors flex items-center gap-2"
+        className="absolute bottom-4 right-4 px-4 py-2 rounded bg-[#2A2A2A] text-[#8A7C4F] font-[Special_Elite] text-sm hover:bg-[#3A3A3A] transition-colors flex items-center gap-2 z-50"
       >
         <span>{state.stats.wordsTyped} words</span>
         <span className="text-[#6A6A6A]">|</span>
         <span>{getWPM()} WPM</span>
       </button>
 
-      {/* Settings button (gear icon) */}
+      {/* Settings button */}
       <button
         onClick={() => setShowSettings(true)}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#2A2A2A] flex items-center justify-center hover:bg-[#3A3A3A] transition-colors"
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-[#2A2A2A] flex items-center justify-center hover:bg-[#3A3A3A] transition-colors z-50"
         title="Settings (ESC)"
       >
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#8A7C4F"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A7C4F" strokeWidth="2">
           <circle cx="12" cy="12" r="3" />
           <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
         </svg>
       </button>
 
-      {/* Help text */}
+      {/* Start prompt */}
       {!hasInteracted && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center animate-fade-in z-50">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center animate-fade-in z-50 pointer-events-none">
           <p className="text-[#F2E8C9] font-[Special_Elite] text-lg mb-2">Click or press any key to begin</p>
           <p className="text-[#6A6A6A] font-[Special_Elite] text-sm">ESC for settings | 1-2-3 for views</p>
         </div>
       )}
 
-      {/* Modals and overlays */}
-      {state.jamState.isJammed && (
-        <JamModal key1={state.jamState.key1} key2={state.jamState.key2} onClear={clearJam} />
-      )}
+      {/* Modals */}
+      {state.jamState.isJammed && <JamModal key1={state.jamState.key1} key2={state.jamState.key2} onClear={clearJam} />}
 
       {showSettings && (
         <SettingsPanel
@@ -597,10 +433,7 @@ export function Typewriter() {
       )}
 
       {state.showBackspaceTooltip && <BackspaceTooltip onDismiss={dismissBackspaceTooltip} />}
-
-      {showPageFullPrompt && (
-        <PageFullTooltip onLoadNewSheet={handleLoadNewSheet} onDismiss={() => setShowPageFullPrompt(false)} />
-      )}
+      {showPageFullPrompt && <PageFullTooltip onLoadNewSheet={handleLoadNewSheet} onDismiss={() => setShowPageFullPrompt(false)} />}
     </div>
   );
 }

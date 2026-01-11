@@ -2,20 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Sound URLs from Freesound.org (CC0 licensed placeholders)
-// Structure allows easy replacement with custom sounds
+// Sound configuration - using local authentic typewriter sound
 const SOUND_URLS = {
   keystroke: [
-    "https://cdn.freesound.org/previews/256/256117_4488812-lq.mp3", // typewriter key 1
-    "https://cdn.freesound.org/previews/256/256116_4488812-lq.mp3", // typewriter key 2
-    "https://cdn.freesound.org/previews/256/256115_4488812-lq.mp3", // typewriter key 3
+    "/audio/single_typing.mp3", // Authentic typewriter keystroke
   ],
-  spacebar: "https://cdn.freesound.org/previews/256/256118_4488812-lq.mp3",
-  carriageReturn: "https://cdn.freesound.org/previews/161/161644_2614628-lq.mp3",
-  carriageAdvance: "https://cdn.freesound.org/previews/256/256114_4488812-lq.mp3",
-  marginBell: "https://cdn.freesound.org/previews/411/411749_5121236-lq.mp3",
-  typebarJam: "https://cdn.freesound.org/previews/352/352515_4019029-lq.mp3",
-  paperLoad: "https://cdn.freesound.org/previews/240/240776_4284968-lq.mp3",
+  spacebar: "/audio/single_typing.mp3",
+  carriageReturn: "/audio/single_typing.mp3", // Use same sound with different pitch
+  carriageAdvance: "/audio/single_typing.mp3",
+  marginBell: "/audio/single_typing.mp3", // Higher pitch for bell effect
+  typebarJam: "/audio/single_typing.mp3", // Lower pitch for jam
+  paperLoad: "/audio/single_typing.mp3",
 };
 
 interface SoundSystemState {
@@ -131,33 +128,33 @@ export function useSoundSystem() {
     [state.isMuted]
   );
 
-  // Specific sound playing functions
+  // Specific sound playing functions with pitch variations for variety
   const playKeystroke = useCallback(() => {
-    playSound("keystroke", { pitchVariation: 0.05, volumeMultiplier: 0.8 });
+    playSound("keystroke", { pitchVariation: 0.15, volumeMultiplier: 0.9 });
   }, [playSound]);
 
   const playSpacebar = useCallback(() => {
-    playSound("spacebar", { volumeMultiplier: 0.9 });
+    playSound("spacebar", { pitchVariation: 0.1, volumeMultiplier: 1.0 });
   }, [playSound]);
 
   const playCarriageReturn = useCallback(() => {
-    playSound("carriageReturn", { volumeMultiplier: 1 });
+    playSound("carriageReturn", { pitchVariation: 0.2, volumeMultiplier: 0.8 });
   }, [playSound]);
 
   const playCarriageAdvance = useCallback(() => {
-    playSound("carriageAdvance", { pitchVariation: 0.03, volumeMultiplier: 0.3 });
+    playSound("carriageAdvance", { pitchVariation: 0.1, volumeMultiplier: 0.4 });
   }, [playSound]);
 
   const playMarginBell = useCallback(() => {
-    playSound("marginBell", { volumeMultiplier: 0.6 });
+    playSound("marginBell", { pitchVariation: 0.3, volumeMultiplier: 0.7 });
   }, [playSound]);
 
   const playTypebarJam = useCallback(() => {
-    playSound("typebarJam", { volumeMultiplier: 0.8 });
+    playSound("typebarJam", { pitchVariation: 0.05, volumeMultiplier: 1.0 });
   }, [playSound]);
 
   const playPaperLoad = useCallback(() => {
-    playSound("paperLoad", { volumeMultiplier: 0.7 });
+    playSound("paperLoad", { pitchVariation: 0.2, volumeMultiplier: 0.6 });
   }, [playSound]);
 
   // Set volume
